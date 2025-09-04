@@ -1,0 +1,386 @@
+/* styles/main.qss */
+
+/* =================================================================== */
+/* === 1. Global Application & Font Styles === */
+/* =================================================================== */
+
+QWidget {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: #F8F9FA; /* A very light grey for the main background */
+    color: #212529; /* Dark text for high contrast */
+}
+
+/* =================================================================== */
+/* === 2. Main Window Sidebar & Header === */
+/* =================================================================== */
+
+QFrame#sidebar {
+    background-color: #FFFFFF;
+    border-right: 1px solid #DEE2E6;
+}
+
+QFrame#header {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #DEE2E6;
+}
+
+QLabel#company_name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #343A40;
+}
+
+/* --- Sidebar Buttons (QPushButton & QToolButton) --- */
+/* This rule now applies to both button types for a consistent look */
+QPushButton#sidebar_button, QToolButton#sidebar_button {
+    color:rgb(53, 55, 57);
+    background-color: transparent;
+    border: solid;
+    padding: 12px;
+    text-align: left;
+    font-size: 14px;
+    border-radius: 10px;
+    font-weight: 500;
+    icon-size: 45px;
+}
+
+QPushButton#sidebar_button:hover, QToolButton#sidebar_button:hover {
+    color: #000000;
+    background-color: #F1F3F5;
+}
+
+QPushButton#sidebar_button:checked, QToolButton#sidebar_button:checked {
+    color: #FFFFFF;
+    background-color: #4C6EF5;
+    font-weight: 600;
+}
+
+QPushButton#sidebar_button:disabled, QToolButton#sidebar_button:disabled {
+    color: #ADB5BD;
+}
+
+/* --- Specific for the Dropdown Button --- */
+QToolButton#sidebar_button {
+    /* Ensures text and icon are aligned like a QPushButton */
+    qproperty-toolButtonStyle: ToolButtonTextBesideIcon; /* FIXED: Used qproperty- prefix */
+}
+
+QToolButton#sidebar_button::menu-indicator {
+    /* Hides the default small arrow on the QToolButton */
+    image: none;
+}
+
+/* --- Styling for the Popup Menu --- */
+QMenu {
+    background-color: white;
+    border: 1px solid #DEE2E6;
+    border-radius: 8px;
+    padding: 5px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #343A40;
+}
+
+QMenu::item {
+    padding: 10px 20px;
+    border-radius: 6px;
+}
+
+QMenu::item:selected {
+    background-color: #E7F5FF;
+    color: #000000;
+}
+
+/* --- General separator line --- */
+QFrame#separator {
+    border: none;
+    border-top: 1px solid #DEE2E6;
+    margin: 5px 0;
+}
+
+
+/* =================================================================== */
+/* === 3. Main Content Area & Cards === */
+/* =================================================================== */
+
+/* --- The main container card used on most tabs --- */
+QFrame#card {
+    background-color: #FFFFFF;
+    border: 1px solid #DEE2E6;
+    border-radius: 8px;
+    padding: 25px;
+}
+
+/* --- Main title label for each page --- */
+QLabel#h1_label {
+    font-size: 28px;
+    font-weight: 600;
+    color: #212529;
+    padding-bottom: 5px;
+}
+
+/* --- Sub-header label used inside cards --- */
+QLabel#h2_label {
+    font-size: 18px;
+    font-weight: 600;
+    color: #343A40;
+    padding-bottom: 12px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #F1F3F5;
+}
+
+
+/* =================================================================== */
+/* === 4. Form Controls (Buttons, Dropdowns, Inputs) === */
+/* =================================================================== */
+
+/* --- General style for all primary buttons --- */
+QPushButton {
+    background-color: #4C6EF5;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+QPushButton:hover {
+    background-color: #4263Eb;
+}
+
+QPushButton:disabled {
+    background-color: #CED4DA;
+    color: #868E96;
+}
+
+/* --- General style for text fields and dropdowns --- */
+QLineEdit, QComboBox {
+    padding: 8px 12px;
+    border: 1px solid #cbd5e0;
+    border-radius: 8px;
+    background-color: white;
+    font-size: 14px;
+    min-height: 22px; /* Ensures the widget is tall enough */
+}
+
+QComboBox:hover, QLineEdit:hover {
+    border-color: #4C6EF5;
+}
+
+/* --- Dropdown arrow styling --- */
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 25px;
+    border-left: 1px solid #E9ECEF;
+}
+
+QComboBox::down-arrow {
+    image: url(assets/icons/chevron-down.svg);
+    width: 18px;
+    height: 18px;
+}
+
+QComboBox QAbstractItemView {
+    border: 1px solid #DEE2E6;
+    background-color: #FFFFFF;
+    selection-background-color: #E7F5FF;
+    selection-color: #000000;
+    padding: 5px;
+    outline: 0px;
+}
+
+/* --- Specific style for filter/search bars --- */
+QLineEdit#filter_bar {
+    padding: 8px 12px;
+    font-size: 14px;
+    margin-bottom: 10px; /* Add space between filter and table */
+}
+
+QLineEdit#filter_bar:focus {
+    border-color: #4C6EF5;
+}
+
+
+/* =================================================================== */
+/* === 5. Tables and In-Table Elements === */
+/* =================================================================== */
+
+/* --- General Table Styling --- */
+QTableWidget {
+    border: 1px solid #DEE2E6;
+    border-radius: 8px;
+    gridline-color: #F1F3F5;
+    font-size: 13px;
+}
+
+QHeaderView::section {
+    background-color: #F8F9FA;
+    padding: 12px;
+    border: none;
+    border-bottom: 1px solid #DEE2E6;
+    font-weight: 600;
+    color: #495057;
+    text-align: left;
+}
+
+QTableWidget::item {
+    padding: 15px 12px; /* Increased vertical padding for more spacing */
+    border-bottom: 1px solid #F1F3F5;
+    text-align: left;
+}
+
+/* --- Labels used inside the "Quick Stats" card --- */
+QLabel#stats_label, QLabel[objectName="stats_label"] {
+    font-size: 14px;
+    font-weight: 500;
+    color: #495057;
+}
+
+QLabel#stats_value_label, QLabel[objectName="stats_value_label"] {
+    font-size: 14px;
+    color: #212529;
+    font-weight: 600;
+}
+
+/* --- Cardinality "Chip" labels in the Overview table --- */
+QLabel[objectName^="chip_"] {
+    padding: 5px 12px;
+    border-radius: 13px;
+    font-weight: 600;
+    font-size: 12px;
+    text-align: center;
+}
+QLabel#chip_low {
+    background-color: #E3F9E5;
+    color: #1D542A;
+}
+QLabel#chip_medium {
+    background-color: #FFF9DB;
+    color: #8A6800;
+}
+QLabel#chip_high {
+    background-color: #FFE3E3;
+    color: #A41E1E;
+}
+
+
+/* =================================================================== */
+/* === 6. Miscellaneous & App-Wide Components === */
+/* =================================================================== */
+
+/* --- Status feedback labels (e.g., success/error messages) --- */
+QLabel[objectName="status_label"] {
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 13px;
+}
+QLabel[objectName="status_success"] {
+    background-color: #E3F9E5;
+    border: 1px solid #B7E4C7;
+    color: #1D542A;
+}
+QLabel[objectName="status_error"] {
+    background-color: #FFE3E3;
+    border: 1px solid #FFC9C9;
+    color: #A41E1E;
+}
+
+/* --- Separator line used in plot cards --- */
+QFrame#plot_separator {
+    border: none;
+    border-top: 1px solid #DEE2E6;
+    margin: 5px 0;
+}
+
+/* --- Scrollbar styling --- */
+QScrollBar:vertical {
+    border: none;
+    background: #F8F9FA;
+    width: 12px;
+}
+QScrollBar::handle:vertical {
+    background: #DDE2E5;
+    min-height: 25px;
+    border-radius: 6px;
+}
+QScrollBar::handle:vertical:hover {
+    background: #CED4DA;
+}
+
+
+/* --- Radio Button Styling (if you add them later) --- */
+QRadioButton {
+    spacing: 5px;
+    color: #212529;
+    font-size: 14px;
+}
+
+QRadioButton::indicator {
+    width: 18px;
+    height: 18px;
+    border: 1px solid #CED4DA;
+    border-radius: 9px; /* Makes it circular */
+    background-color: white;
+}
+
+QRadioButton::indicator:checked {
+    background-color: #4C6EF5;
+    border: 1px solid #4C6EF5;
+}
+
+QRadioButton::indicator:checked::after {
+    content: "";
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background-color: white;
+    margin: 5px; /* Center the dot */
+}
+
+QRadioButton::indicator:hover {
+    border-color: #4C6EF5;
+}
+
+/* --- QTabWidget (for the sub-tabs) --- */
+QTabWidget::pane {
+    border: 1px solid #DEE2E6;
+    background-color: #F8F9FA; /* Background for the tab content area */
+    border-radius: 8px;
+    margin-top: -1px; /* Overlap with the tab bar border */
+}
+
+QTabWidget::tab-bar {
+    left: 5px; /* move to the right by 5px */
+}
+
+QTabBar::tab {
+    background: #E9ECEF; /* Default tab background */
+    border: 1px solid #DEE2E6;
+    border-bottom-color: #DEE2E6; /* Same as pane border */
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    padding: 8px 15px;
+    margin-right: 2px;
+    color: #495057; /* Default tab text color */
+    font-weight: 500;
+}
+
+QTabBar::tab:selected {
+    background: #FFFFFF; /* Selected tab background */
+    border-bottom-color: #FFFFFF; /* Make selected tab border blend with pane */
+    color: #212529; /* Selected tab text color */
+    font-weight: 600;
+}
+
+QTabBar::tab:hover:!selected {
+    background: #F1F3F5; /* Hover effect for unselected tabs */
+}
+
+/* Ensure scroll area content is visible */
+QScrollArea > QWidget {
+    background-color: transparent; /* Ensure content widget inside scroll area is transparent */
+}

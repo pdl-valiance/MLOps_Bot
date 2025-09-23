@@ -25,7 +25,7 @@ from ui.exploratory_analysis_tab import (TimeSeriesPage, DemandPatternsPage, Dat
                                          AutoMLPage, ParetoAnalysisPage)
 
 # --- NEW: Import the AI Analyst Tab ---
-from ui.ai_analyst_tab import AIAnalystTab
+from ui.ai_analyst_tab_new import AIAnalystTab
 
 # --- Handler for Stylesheet Hot-Reloading ---
 class StyleReloader(QObject):

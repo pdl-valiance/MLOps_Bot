@@ -8,6 +8,7 @@ from matplotlib import pyplot as plt
 import os
 import re
 
+
 def fill_missing_time_rows(
     df: pd.DataFrame,
     combination_cols: list,
@@ -73,6 +74,7 @@ def fill_missing_time_rows(
     return final_df
 
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
+from statsmodels.tsa.statespace.sarimax import SARIMAX 
 tbats_available = False
 try:
     from tbats import TBATS
@@ -80,7 +82,6 @@ try:
 except ImportError:
     tbats_available = False
     warnings.warn("TBATS package not installed. TBATS model will be skipped. Install with: pip install tbats")
-
 
 def forecast_time_series(data, forecast_date, date_column="Date", target_column="Weekly_Sales", 
                          forecast_periods=21, plot_results=True,results_save=False, max_plot_date = None,
@@ -145,6 +146,7 @@ def forecast_time_series(data, forecast_date, date_column="Date", target_column=
     available_models = [
                         'es', 
                         # 'prophet'
+                        'sarima'
                         ]
     if sarima_orders is not None or sarima_seasonal_periods is not None:
         available_models.append('sarima')
@@ -473,7 +475,10 @@ def forecast_time_series(data, forecast_date, date_column="Date", target_column=
     # Add to results
     results['forecast_df'] = forecast_df
     results['fitted_models'] = fitted_models
-    
+    # print(results.keys)
+    # print(data)
+    for col in [c for c in data.columns if c not in [date_column, target_column, 'intersection','IsHoliday']]:
+        results[col] = data[col].unique()[0]
     # ---------------
     # Evaluation metrics for test set (if available)
     # ---------------
@@ -590,77 +595,34 @@ def forecast_time_series(data, forecast_date, date_column="Date", target_column=
 
     return results
 
-
-def fit_exp_smoothing_models(df, target_col='Weekly_Sales', 
-                           group_col='intersection', 
-                           date_col='Date',
-                           seasonal_periods=52,
-                           forecast_periods=52):
-    """
-    Fits exponential smoothing models for each unique group in the dataset.
-    
-    Parameters:
-    -----------
-    df : pandas.DataFrame
-        Input dataframe containing the time series data
-    target_col : str, default='Weekly_Sales'
-        Column name containing the target variable
-    group_col : str, default='intersection'
-        Column name containing the group identifiers
-    date_col : str, default='Date'
-        Column name containing the dates
-    seasonal_periods : int, default=52
-        Number of periods in one season (52 for weekly data)
-    
-    Returns:
-    --------
-    dict
-        Dictionary containing fitted models for each group
-    """
-    # Dictionary to store models
-    models = {}
-    
-    # Sort dataframe by date
-    df = df.sort_values(date_col)
-    
-    # Fit model for each unique intersection
-    for group in tqdm(df[group_col].unique()):
-        # Get data for this group
-        group_data = df[df[group_col] == group][target_col]
-        
-        try:
-            # Initialize and fit the model
-            # Using multiplicative seasonality and trend
-            model = ExponentialSmoothing(
-                group_data,
-                seasonal_periods=seasonal_periods,
-                trend='add',
-                seasonal='add'
-            ).fit()
-            
-            # Store the fitted model
-            models[group] = model
-            
-        except Exception as e:
-            print(f"Error fitting model for group {group}: {str(e)}")
-            continue
-    
-    return models
-
-
-
 # Example usage
 if __name__ == "__main__":
     # Create a synthetic example dataset
     
     df = pd.read_csv("Data/train.csv",parse_dates=["Date"])
+    np.random.seed(42)  # deterministic assignments
 
+    # Dept -> (Division, Category)
+    unique_depts = list(df['Dept'].unique())
+    divisions = list("ABCD")
+    dept_divisions = dict(zip(unique_depts, np.random.choice(divisions, size=len(unique_depts), replace=True)))
+    dept_categories = dict(zip(unique_depts, np.random.choice(list(range(7)), size=len(unique_depts), replace=True)))
+
+    # Store -> Country
+    countries = ["USA", "Canada", "UK", "Germany", "France"]
+    unique_stores = list(df['Store'].unique())
+    store_countries = dict(zip(unique_stores, np.random.choice(countries, size=len(unique_stores), replace=True)))
+
+    # Apply mappings to dataframe
+    df['Division'] = df['Dept'].map(dept_divisions)
+    df['Category'] = df['Dept'].map(lambda d: f"{dept_divisions[d]}_{dept_categories[d]}")
+    df['Country'] = df['Store'].map(store_countries)
     df_filled = fill_missing_time_rows(df,
-                                    combination_cols = ['Store','Dept'],
+                                    combination_cols = ['Country','Store','Division','Category','Dept'],
                                     date_col="Date",
                                     freq="W-FRI",
                                     fill_zero_cols=['Weekly_Sales'])
-
+        
     df_filled['intersection'] = df_filled['Store'].astype(str) + "_" + df_filled['Dept'].astype(str)
 
         
@@ -668,7 +630,7 @@ if __name__ == "__main__":
     top_20_percent = int(len(vol) * 0.2)
     top_intersections = vol.iloc[:top_20_percent].index
     np.random.seed(42)
-    selected_intersections = np.random.choice(top_intersections, size=100, replace=False)
+    selected_intersections = np.random.choice(top_intersections, size=150, replace=False)
     
     df_filled.sort_values('Date', inplace=True)
     df_filled.reset_index(drop=True, inplace=True)
@@ -726,11 +688,17 @@ for intersection, result in final_results.items():
                     'date': row['ds'],
                     'forecast': row.get(f"{model}_prediction"),
                     'actual_sales': row.get('y'),
+                    'Country':result['original_data']['Country'].unique()[0],
+                    'Store':result['original_data']['Store'].unique()[0],
+                    'Division':result['original_data']['Division'].unique()[0],
+                    'Category':result['original_data']['Category'].unique()[0],
+                    'Product':result['original_data']['Dept'].unique()[0],
                     # 'rmse': vals.get('rmse'),
                     # 'wmape': vals.get('wmape'),
                     # 'mape': vals.get('mape')
                 })
+            
 summary_df = pd.DataFrame(summary_rows)
-summary_file = os.path.join(results_dir, re.sub(r"[|/]", replacement_string, f"Stat_forecast_summary_{forecast_date.strftime('%Y%m%d')}_select_articles.csv"))
+summary_file = os.path.join(results_dir, re.sub(r"[|/]", replacement_string, f"Stat_forecast_{forecast_date.strftime('%Y%m%d')}_select_articles.csv"))
 summary_df.to_csv(summary_file, index=False)
 print(f"Summary DataFrame saved to: {summary_file}")

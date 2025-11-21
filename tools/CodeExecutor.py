@@ -68,20 +68,36 @@ def _worker_exec(code_str: str, df: pd.DataFrame, queue: Queue):
         logging.info("Starting execution...")
         print("[Worker] Code to execute:\n", code_str, flush=True)
         
+        
+        def _safe_import(name, globals=None, locals=None, fromlist=(), level=0):
+            # allow only a small set of safe modules (expand carefully if needed)
+            _real_import = builtins.__import__
+            
+            allowed_root = {
+                "math", "statistics", "datetime", "json", "re",
+                "itertools", "functools", "operator", "collections",
+                "pandas", "numpy"
+            }
+            root = name.split(".")[0]
+            
+            if root in allowed_root:
+                # if module already loaded use that, else delegate to real import
+                return _real_import(name, globals, locals, fromlist, level)
+            raise ImportError(f"Import of module '{name}' is restricted.")
 
-        # prepare restricted builtins
         allowed_builtins_names = [
             "abs", "all", "any", "bool", "chr", "complex", "dict", "divmod",
             "enumerate", "float", "int", "len", "list", "map", "max", "min",
             "next", "pow", "range", "repr", "round", "sorted", "sum", "zip",
-            "print","import"
+            "print"
         ]
         safe_builtins = {name: getattr(builtins, name)
-                         for name in allowed_builtins_names if hasattr(builtins, name)}
-
+                            for name in allowed_builtins_names if hasattr(builtins, name)}
+        
         # Create globals with pandas and numpy available
         restricted_globals = {"pd": pd, "np": np, "__builtins__": safe_builtins}
-
+        # inject safe __import__ so import statements in generated code don't fail
+        safe_builtins["__import__"] = _safe_import
         # Local namespace for exec
         local_ns = {"df": df}
         logging.info("[Worker] DataFrame injected into local_ns.")
@@ -106,20 +122,20 @@ def _worker_exec(code_str: str, df: pd.DataFrame, queue: Queue):
 
         # --- Validate result type ---
         if isinstance(result, dict):
-            if isinstance(result.get("df"), pd.DataFrame):
+            if isinstance(result.get("DataFrame"), pd.DataFrame):
                 print("[Worker] Result is a DataFrame, sending back.")
-                queue.put({"status": "ok_df", "result": result})
+                queue.put({"status": "ok_df_generated", "result": result})
             else:
-                msg = "Result dict must contain a DataFrame under key 'df'."
+                msg = "Result dict must contain a DataFrame under key 'DataFrame'."
                 print("[Worker] ERROR:", msg)
                 queue.put({"status": "error", "result": msg})
         elif isinstance(result, str):
             print("[Worker] Result is string.")
-            queue.put({"status": "ok_str", "result": result})
+            queue.put({"status": "ok_str_generated", "result": result})
             
         else:
             print(f"[Worker] Result is of type {type(result)}, converting to string.")
-            queue.put({"status": "ok_random", "result": str(result)})
+            queue.put({"status": "ok_random_generated", "result": str(result)})
 
         print("[Worker] Successfully pushed result to queue.")
 
@@ -177,6 +193,18 @@ def run_generated_code_in_subprocess(code_str: str, df: pd.DataFrame, timeout: i
     Runs AST checks, then runs code in separate process with timeout.
     Returns dict with status and either new_df or serialized output.
     """
+    if code_str.startswith("```"):
+        # Split by lines
+        lines = code_str.split("\n")
+        # Remove first line (```python or ```)
+        if lines[0].startswith("```"):
+            lines = lines[1:]
+        # Remove last line (```) if present
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        # Rejoin
+        code_str = "\n".join(lines).strip()
+    
     try:
         ast_safety_check(code_str)
     except Exception as e:
